@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录注册页</title>
+    <link rel="stylesheet" href="/css/bulma.css"/>
+    <script src="/js/vue.min.js"></script>
+    <script src="/js/vue-resource.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <label class="label">用户名：</label>
+        <p class="control">
+            <input class="input" type="text" v-model="user">
+        </p>
+        <label class="label">密码：</label>
+        <p class="control">
+            <input class="input" type="password" v-model="psw">
+        </p>
+        <p class="control">
+            <button class="button is-primary" @click="login">登录</button>
+            <button class="button is-info" @click="register">注册</button>
+        </p>
+    </div>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: function(){
+                return {
+                    user: '',
+                    psw: ''
+                }
+            },
+            methods: {
+                login: function(){
+                    var data = {
+                        user: this.user,
+                        psw: this.psw
+                    };
+                    this.$http.post('/user/login', data).then(
+                        function(res){
+                            if(res && res.status == 200) {
+                                window.location.href = '/workspace'
+                            } else {
+                                alert('用户名或密码错误');
+                            }
+                        },
+                        function(){
+                            alert('用户名或密码错误');
+                        }
+                    );
+                },
+                register: function(){
+                    var data = {
+                        user: this.user,
+                        psw: this.psw
+                    };
+                    this.$http.post('/user/register', data).then(
+                        function(res){
+                            if(res && res.status == 200) {
+                                alert('注册成功');
+                            } else {
+                                alert('注册失败');
+                            }
+                        },
+                        function(){
+                            alert('注册失败');
+                        }
+                    );
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>workspace</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/bulma.css"/>
+    <style>
+        .panel-block {
+            background-color: white;
+        }
+        .panel-block.is-active .panel-icon {
+            color: #00d1b2;
+        }
+        .scroll-wrap {
+            overflow-y: scroll;
+            height: 600px;
+        }
+        .book-info {
+            font-size: 16px;
+        }
+        .book-info-key {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+    <script src="/js/vue.min.js"></script>
+    <script src="/js/vue-resource.min.js"></script>
+    <script>
+        var lockUpdateInterval = <%- lockUpdateInterval %>;
+        var user = '<%- user%>';
+    </script>
+</head>
+<body>
+    <div id="app">
+        <div class="columns">
+            <div class="column is-3">
+                <nav class="panel">
+                    <p class="panel-heading">
+                        书目
+                    </p>
+                    <div class="scroll-wrap">
+                        <a class="panel-block" :class="{'is-active': currentBook == book.isbn}" v-for="book in bookList" @click="setBookDetail(book)">
+                            <span class="panel-icon">
+                                <i class="fa fa-book"></i>
+                            </span>
+                                {{book.chinese_name}}({{book.isbn}})
+                        </a>
+                        <a class="panel-block" @click="openModal">
+                            <span class="panel-icon">
+                              <i class="fa fa-plus"></i>
+                            </span>
+                            新增
+                        </a>
+                    </div>
+                </nav>
+            </div>
+            <div class="column is-1">
+                <nav class="panel">
+                    <p class="panel-heading">
+                        页列表
+                    </p>
+                    <div class="scroll-wrap">
+                        <a class="panel-block" :class="{'is-active': currentPage == page}" v-for="page in pageList" @click="getPage(page)">
+                            <span class="panel-icon">
+                                <i class="fa fa-file-text"></i>
+                            </span>
+                            {{page}}
+                        </a>
+                        <a class="panel-block" :class="{'is-hidden': !currentBook}" @click="addPage">
+                            <span class="panel-icon">
+                              <i class="fa fa-plus"></i>
+                            </span>
+                            新增
+                        </a>
+                    </div>
+                </nav>
+            </div>
+            <div class="column" :class="{'is-hidden': !currentBook}">
+                <p>
+                    <span class="book-info">
+                        <span class="book-info-key">原名：</span>{{currentBookDetail.original_name}}
+                        <span class="book-info-key">中文名：</span>{{currentBookDetail.chinese_name}}
+                        <span class="book-info-key">作者：</span>{{currentBookDetail.writer}}
+                        <span class="book-info-key">编号：</span>{{currentBookDetail.isbn}}
+                        <span class="book-info-key">当前编辑者：</span>{{currentEditor}}
+                    </span>
+                </p>
+                <div :class="{'is-hidden': !currentBook || !currentPage}">
+                    <a class="button is-primary" :class="{'is-disabled': user != currentEditor}" @click="savePage">保存</a>
+                    <div class="scroll-wrap">
+                        <p class="control" v-for="(s, index) in page">
+                            {{index}}.
+                            <textarea class="textarea" rows="3" v-model="s.o" style="min-height: 70px;"></textarea>
+                            <textarea class="textarea" rows="3" v-model="s.t" style="min-height: 70px;"></textarea>
+                            <a class="button is-info" @click="addSentence(index)">插入</a>
+                            <a class="button is-danger" @click="removeSentence(index)">删除</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal" :class="{'is-active': isModalActive}">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">添加新书</p>
+                    <button class="delete" @click="closeModal"></button>
+                </header>
+                <section class="modal-card-body">
+                    <label class="label">ISBN</label>
+                    <p class="control">
+                        <input class="input" type="text" v-model="newBook.isbn">
+                    </p>
+                    <label class="label">原名</label>
+                    <p class="control">
+                        <input class="input" type="text" v-model="newBook.original_name">
+                    </p>
+                    <label class="label">中文名</label>
+                    <p class="control">
+                        <input class="input" type="text" v-model="newBook.chinese_name">
+                    </p>
+                    <label class="label">作者</label>
+                    <p class="control">
+                        <input class="input" type="text" v-model="newBook.writer">
+                    </p>
+                </section>
+                <footer class="modal-card-foot">
+                    <a class="button is-primary" @click="addNewBook">保存</a>
+                </footer>
+            </div>
+        </div>
+    </div>
+    <script>
+        var library = '/api/v1/workbench';
+        var getLock = '/api/v1/workbench/getLock';
+        var updateLock = '/api/v1/workbench/updateLock';
+        function getURL(book, page){
+            var url = library;
+            if(book) url += '/' + book;
+            if(page) url += '/' + page;
+            return url;
+        }
+        var app = new Vue({
+            el: '#app',
+            data: function(){
+                return {
+                    user: user,
+                    bookList: [],
+                    pageList: [],
+                    page: [],
+                    currentBook: null,
+                    currentBookDetail: {},
+                    currentPage: null,
+                    isModalActive: false,
+                    newBook: {},
+                    currentEditor: null
+                }
+            },
+            methods: {
+                getBookList: function(){
+                    this.$http.get(getURL()).then(
+                        function(res){
+                            this.bookList = res.body;
+                        }
+                    )
+                },
+                setBookDetail: function(book){
+                    this.currentBookDetail = book;
+                    this.getPageList(book.isbn);
+                },
+                getPageList: function(isbn){
+                    this.$http.get(getURL(isbn)).then(
+                        function(res){
+                            this.currentBook = isbn;
+                            this.pageList = res.body;
+                            this.currentPage = null;
+                            this.page = [];
+                        }
+                    )
+                },
+                getPage: function(page){
+                    var book = this.currentBook;
+                    if(!book) return alert('没有currentBook');
+                    this.$http.get(getURL(book, page)).then(
+                         function(res){
+                             this.currentPage = page;
+                             this.page = res.body;
+                             this.getLock();
+                         }
+                    );
+                },
+                addPage: function(){
+                    var isbn = this.currentBook;
+                    this.$http.post(getURL(isbn, 'page')).then(
+                        function(){
+                            this.getPageList(isbn);
+                        }
+                    );
+                },
+                savePage: function(){
+                    var book = this.currentBook;
+                    var page = this.currentPage;
+                    if(!book || !page) return alert('没有currentBook或currentPage');
+                    this.$http.put(getURL(book, page), this.page).then(
+                        function(){
+                            this.getPage(page);
+                        },
+                        function(res){
+                            this.getPage(page);
+                            alert(res.body.msg);
+                        }
+                    );
+                },
+                addSentence: function(index){
+                    //在index的后面插入一个
+                    var tem = {
+                        o: '',
+                        t: ''
+                    };
+                    this.page.splice(index+1, 0, tem);
+                },
+                removeSentence: function(index){
+                    if(this.page.length == 1) return alert('至少要剩一个句子');
+                    this.page.splice(index, 1)
+                },
+                openModal: function(){
+                    this.isModalActive = true;
+                },
+                closeModal: function(){
+                    this.newBook = {};
+                    this.isModalActive = false;
+                },
+                addNewBook: function(){
+                    var book = this.newBook.isbn;
+                    this.$http.post(getURL(), this.newBook).then(
+                        function(){
+                            this.closeModal();
+                            this.getBookList();
+                        }
+                    );
+                },
+                getLock: function(){
+                    var data = {
+                        isbn: this.currentBook,
+                        page: this.currentPage
+                    };
+                    this.$http.post(getLock, data).then(
+                        function(res){
+                            if(res.body.currentEditor){
+                                this.currentEditor = res.body.currentEditor;
+                            } else {
+                                this.updateLock();
+                            }
+                        }
+                    )
+                },
+                updateLock: function(){
+                    if(!this.currentBook || !this.currentPage) return;
+                    var data = {
+                        isbn: this.currentBook,
+                        page: this.currentPage
+                    };
+                    this.$http.post(updateLock, data).then(
+                        function(){
+                            this.getLock();
+                        }
+                    )
+                },
+                updateLockRoutine: function(){
+                    setTimeout(this.updateLockRoutine.bind(this), lockUpdateInterval);
+                    this.updateLock();
+                }
+            },
+            created: function(){
+                this.getBookList();
+                this.updateLockRoutine();
+            }
+        });
+    </script>
+</body>
+</html>
