@@ -186,7 +186,7 @@
                          function(res){
                              this.currentPage = page;
                              this.page = res.body;
-                             this.getLock();
+                             this.updateLock();
                          }
                     );
                 },
@@ -240,21 +240,6 @@
                         }
                     );
                 },
-                getLock: function(){
-                    var data = {
-                        isbn: this.currentBook,
-                        page: this.currentPage
-                    };
-                    this.$http.post(getLock, data).then(
-                        function(res){
-                            if(res.body.currentEditor){
-                                this.currentEditor = res.body.currentEditor;
-                            } else {
-                                this.updateLock();
-                            }
-                        }
-                    )
-                },
                 updateLock: function(){
                     if(!this.currentBook || !this.currentPage) return;
                     var data = {
@@ -262,13 +247,18 @@
                         page: this.currentPage
                     };
                     this.$http.post(updateLock, data).then(
+                        function(res){
+                            this.currentEditor = res.body.currentEditor;
+                        },
                         function(){
-                            this.getLock();
+                            alert('更新当前编辑者出错');
+                            this.currentEditor = '';
                         }
                     )
                 },
                 updateLockRoutine: function(){
                     setTimeout(this.updateLockRoutine.bind(this), lockUpdateInterval);
+                    if(this.currentEditor != user) return;
                     this.updateLock();
                 }
             },
