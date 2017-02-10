@@ -40,7 +40,7 @@
                     this.$http.post('/user/login', data).then(
                         function(res){
                             if(res && res.status == 200) {
-                                window.location.href = '/workspace'
+                                window.location.href = '/workbench.html'
                             } else {
                                 alert('用户名或密码错误');
                             }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>workspace</title>
+    <title>workbench</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
     <link rel="stylesheet" href="/css/bulma.css"/>
     <style>
@@ -26,10 +26,6 @@
     </style>
     <script src="/js/vue.min.js"></script>
     <script src="/js/vue-resource.min.js"></script>
-    <script>
-        var lockUpdateInterval = <%- lockUpdateInterval %>;
-        var user = '<%- user%>';
-    </script>
 </head>
 <body>
     <div id="app">
@@ -135,6 +131,7 @@
         var library = '/api/v1/workbench';
         var getLock = '/api/v1/workbench/getLock';
         var updateLock = '/api/v1/workbench/updateLock';
+        var getInfo = '/api/v1/workbench/info';
         function getURL(book, page){
             var url = library;
             if(book) url += '/' + book;
@@ -150,7 +147,8 @@
             el: '#app',
             data: function(){
                 return {
-                    user: user,
+                    user: null,
+                    lockUpdateInterval: null,
                     bookList: [],
                     pageList: [],
                     page: [],
@@ -159,7 +157,8 @@
                     currentPage: null,
                     isModalActive: false,
                     newBook: {},
-                    currentEditor: null
+                    currentEditor: null,
+                    info: null
                 }
             },
             methods: {
@@ -258,14 +257,30 @@
                     )
                 },
                 updateLockRoutine: function(){
-                    setTimeout(this.updateLockRoutine.bind(this), lockUpdateInterval);
-                    if(this.currentEditor != user) return;
+                    setTimeout(this.updateLockRoutine.bind(this), this.lockUpdateInterval);
+                    if(this.currentEditor != this.user) return;
                     this.updateLock();
+                },
+                init: function(){
+                    this.$http.get(getInfo).then(
+                            function(res){
+                                var info = res.body;
+                                this.user = info.user;
+                                this.lockUpdateInterval = info.lockUpdateInterval;
+                                this.getBookList();
+                                this.updateLockRoutine();
+                            },
+                            function(res){
+                                if(res.status == 401){
+                                    return window.location.href = '/user.html'
+                                }
+                                alert('获取info时发生未知错误');
+                            }
+                    );
                 }
             },
             created: function(){
-                this.getBookList();
-                this.updateLockRoutine();
+                this.init();
             }
         });
     </script>
