@@ -23,7 +23,15 @@
             font-weight: bold;
             margin-left: 10px;
         }
+        #msg {
+            font-size: 16px;
+            color: blue;
+        }
     </style>
+    <script>
+        var lockUpdateInterval = <%- lockUpdateInterval %>;
+        var user = '<%- user%>';
+    </script>
     <script src="/js/vue.min.js"></script>
     <script src="/js/vue-resource.min.js"></script>
 </head>
@@ -84,6 +92,7 @@
                 </p>
                 <div :class="{'is-hidden': !currentBook || !currentPage}">
                     <a class="button is-primary" :class="{'is-disabled': user != currentEditor}" @click="savePage">保存</a>
+                    <span id="msg" class="is-hidden">保存成功</span>
                     <div class="scroll-wrap">
                         <p class="control" v-for="(s, index) in page">
                             {{index}}.
@@ -131,7 +140,6 @@
         var library = '/api/v1/workbench';
         var getLock = '/api/v1/workbench/getLock';
         var updateLock = '/api/v1/workbench/updateLock';
-        var getInfo = '/api/v1/workbench/info';
         function getURL(book, page){
             var url = library;
             if(book) url += '/' + book;
@@ -209,6 +217,11 @@
                     this.$http.put(getURL(book, page), this.page).then(
                         function(){
                             this.getPage(page);
+                            var msg = document.getElementById('msg');
+                            msg.className = '';
+                            setTimeout(function(){
+                                msg.className = 'is-hidden';
+                            }, 800)
                         },errorHandler
                     );
                 },
@@ -262,21 +275,10 @@
                     this.updateLock();
                 },
                 init: function(){
-                    this.$http.get(getInfo).then(
-                            function(res){
-                                var info = res.body;
-                                this.user = info.user;
-                                this.lockUpdateInterval = info.lockUpdateInterval;
-                                this.getBookList();
-                                this.updateLockRoutine();
-                            },
-                            function(res){
-                                if(res.status == 401){
-                                    return window.location.href = '/user.html'
-                                }
-                                alert('获取info时发生未知错误');
-                            }
-                    );
+                    this.user = user;
+                    this.lockUpdateInterval = lockUpdateInterval;
+                    this.getBookList();
+                    this.updateLockRoutine();
                 }
             },
             created: function(){
