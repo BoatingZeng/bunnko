@@ -19,7 +19,7 @@
         </p>
         <p class="control">
             <button class="button is-primary" @click="login">登录</button>
-            <button class="button is-info" @click="register">注册</button>
+            <button class="button is-info is-hidden" @click="register">注册</button>
         </p>
     </div>
     <script>
@@ -37,7 +37,7 @@
                         user: this.user,
                         psw: this.psw
                     };
-                    this.$http.post('/user/login', data).then(
+                    this.$http.post('/public/user/login', data).then(
                         function(res){
                             if(res && res.status == 200) {
                                 window.location.href = '/workbench'
@@ -45,8 +45,12 @@
                                 alert('用户名或密码错误');
                             }
                         },
-                        function(){
-                            alert('用户名或密码错误');
+                        function(res){
+                            if(res.status == 403){
+                                alert('用户名或密码错误');
+                            } else {
+                                alert('错误码：'+res.status);
+                            }
                         }
                     );
                 },
@@ -55,7 +59,7 @@
                         user: this.user,
                         psw: this.psw
                     };
-                    this.$http.post('/user/register', data).then(
+                    this.$http.post('/public/user/register', data).then(
                         function(res){
                             if(res && res.status == 200) {
                                 alert('注册成功');

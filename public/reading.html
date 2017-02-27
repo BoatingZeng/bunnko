@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>reading</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/bulma.css"/>
+    <script src="/js/vue.min.js"></script>
+    <script src="/js/vue-resource.min.js"></script>
+    <style>
+        .panel-block {
+            background-color: white;
+        }
+        .panel-block.is-active .panel-icon {
+            color: #00d1b2;
+        }
+        .scroll-wrap {
+            overflow-y: scroll;
+            height: 600px;
+        }
+        h1,h2,h3,h4,h5,h6 {
+            text-align: center;
+        }
+        .section {
+            padding: 17px;
+        }
+        .pagination-previous, .pagination-next, .pagination-link {
+            border: 1px solid #dbdbdb;
+        }
+        .pagination-link.is-current {
+            background-color: #00d1b2;
+            border-color: #00d1b2;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="columns">
+            <div class="column is-3">
+                <nav class="panel">
+                    <p class="panel-heading">
+                        书目
+                    </p>
+                    <div class="scroll-wrap">
+                        <a class="panel-block" :class="{'is-active': currentBook == book.isbn}" v-for="book in bookList" @click="setBookDetail(book)">
+                            <span class="panel-icon">
+                                <i class="fa fa-book"></i>
+                            </span>
+                            {{book.chinese_name}}({{book.isbn}})
+                        </a>
+                    </div>
+                </nav>
+            </div>
+            <div class="column" :class="{'is-hidden': !currentBook}">
+                <div :class="{'is-hidden': !currentBook || !currentPage}">
+                    <div id="reading-zone" class="scroll-wrap content">
+                        <h3 class="title is-3">{{currentBookDetail.original_name}}</h3>
+                        <h3 class="title is-3">{{currentBookDetail.chinese_name}}</h3>
+                        <h5 class="title is-5">{{currentBookDetail.writer}}</h5>
+                        <div class="section" v-for="s in page">
+                            <p>{{s.o}}</p>
+                            <p style="background-color: #c8edfa">{{s.t}}</p>
+                        </div>
+                    </div>
+                    <nav class="pagination is-centered">
+                        <a class="pagination-previous" :class="{'is-disabled': currentPage == 0}" @click="prePage()">Previous</a>
+                        <a class="pagination-next" :class="{'is-disabled': currentPage == pageList.length - 1}" @click="nextPage()">Next page</a>
+                        <ul class="pagination-list">
+                            <li v-for="page in pageList">
+                                <a class="pagination-link" :class="{'is-current': currentPage == page}" @click="getPage(page)">{{page}}</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var library = '/api/v1/public/bookshelf';
+        function getURL(book, page){
+            var url = library;
+            if(book) url += '/' + book;
+            if(page) url += '/' + page;
+            return url;
+        }
+        function errorHandler(res){
+            var msg = '发生错误。';
+            if(res.body && res.body.msg) msg += res.body.msg;
+            alert(msg);
+        }
+        var app = new Vue({
+            el: '#app',
+            data: function(){
+                return {
+                    bookList: [],
+                    pageList: [],
+                    page: [],
+                    currentBook: null,
+                    currentBookDetail: {},
+                    currentPage: null,
+                    info: null
+                }
+            },
+            methods: {
+                getBookList: function(){
+                    this.$http.get(getURL()).then(
+                            function(res){
+                                this.bookList = res.body;
+                            },errorHandler
+                    )
+                },
+                setBookDetail: function(book){
+                    this.currentBookDetail = book;
+                    this.getPageList(book.isbn);
+                },
+                getPageList: function(isbn){
+                    this.$http.get(getURL(isbn)).then(
+                            function(res){
+                                this.currentBook = isbn;
+                                this.pageList = res.body;
+                                this.currentPage = null;
+                                this.page = [];
+                                if(this.pageList.length > 0){
+                                    this.getPage('0');
+                                }
+                            },errorHandler
+                    )
+                },
+                getPage: function(page){
+                    var book = this.currentBook;
+                    if(!book) return alert('没有currentBook');
+                    this.$http.get(getURL(book, page)).then(
+                            function(res){
+                                this.currentPage = page;
+                                this.page = res.body;
+                                document.getElementById('reading-zone').scrollTop = 0;
+                            },errorHandler
+                    );
+                },
+                prePage: function(){
+                    var currentPage = parseInt(this.currentPage);
+                    if(currentPage == 0) return;
+                    this.getPage(currentPage - 1 + '');
+                },
+                nextPage: function(){
+                    var currentPage = parseInt(this.currentPage);
+                    if(currentPage == this.pageList.length -1) return;
+                    this.getPage(currentPage + 1);
+                },
+                init: function(){
+                    this.getBookList();
+                }
+            },
+            created: function(){
+                this.init();
+            }
+        });
+    </script>
+</body>
+</html>

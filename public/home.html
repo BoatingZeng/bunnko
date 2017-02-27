@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>home</title>
+    <script src="https://unpkg.com/vue@2.2.1/dist/vue.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-default/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+</head>
+<body>
+<div id="app">
+    <el-menu class="el-menu-demo" mode="horizontal">
+        <el-menu-item index="1"><a href="/workbench">WorkBench</a></el-menu-item>
+        <el-menu-item index="2"><a href="/reading.html">Reading</a></el-menu-item>
+    </el-menu>
+    <p>WorkBench是工作台，需要登录。Reading是阅览室。不要吐槽页面样式。</p>
+    <p>没什么内容，放个网易云音乐外链试试。</p>
+    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=459925524&auto=0&height=66"></iframe>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: function(){
+            return {}
+        }
+    })
+</script>
+</body>
+</html>
