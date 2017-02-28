@@ -73,6 +73,21 @@
         </div>
     </div>
     <script>
+        function setCookie(name,value)
+        {
+            var Days = 30;
+            var exp = new Date();
+            exp.setTime(exp.getTime() + Days*24*60*60*1000);
+            document.cookie = name + "="+ value + ";expires=" + exp.toGMTString();
+        }
+        function getCookie(name)
+        {
+            var arr,reg=new RegExp("(^| )"+name+"=([^;]*)(;|$)");
+            if(arr=document.cookie.match(reg))
+                return arr[2];
+            else
+                return null;
+        }
         var library = '/api/v1/public/bookshelf';
         function getURL(book, page){
             var url = library;
@@ -118,7 +133,9 @@
                                 this.currentPage = null;
                                 this.page = [];
                                 if(this.pageList.length > 0){
-                                    this.getPage('0');
+                                    var page = getCookie(this.currentBook);
+                                    if(!page) page = '0';
+                                    this.getPage(page);
                                 }
                             },errorHandler
                     )
@@ -131,6 +148,7 @@
                                 this.currentPage = page;
                                 this.page = res.body;
                                 document.getElementById('reading-zone').scrollTop = 0;
+                                setCookie(this.currentBook, page);
                             },errorHandler
                     );
                 },
