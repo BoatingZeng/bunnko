@@ -64,13 +64,9 @@
                         </div>
                     </div>
                     <nav class="pagination is-centered">
-                        <a class="pagination-previous" :class="{'is-disabled': currentPage == 0}" @click="prePage()">Previous</a>
-                        <a class="pagination-next" :class="{'is-disabled': currentPage == pageList.length - 1}" @click="nextPage()">Next page</a>
-                        <ul class="pagination-list">
-                            <li v-for="page in pageList">
-                                <a class="pagination-link" :class="{'is-current': currentPage == page}" @click="getPage(page)">{{page}}</a>
-                            </li>
-                        </ul>
+                        <a class="pagination-previous" :class="{'is-disabled': currentPage == 0}" @click="prePage()">< Prev</a>
+                        <a class="pagination-next" :class="{'is-disabled': currentPage == pageList.length - 1}" @click="nextPage()">Next ></a>
+                        <input type="number" :value="currentPage-0+1" min="1" :max="pageList.length" @keypress="jump">/{{pageList.length}}
                     </nav>
                 </div>
             </div>
@@ -147,6 +143,12 @@
                     var currentPage = parseInt(this.currentPage);
                     if(currentPage == this.pageList.length -1) return;
                     this.getPage(currentPage + 1);
+                },
+                jump: function(evt){
+                    if(evt.keyCode == "13"){
+                        var val = evt.target.value-0-1;
+                        this.getPage(val+'');
+                    }
                 },
                 init: function(){
                     this.getBookList();
