@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <title>reading</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
     <link rel="stylesheet" href="/css/bulma.css"/>
@@ -39,10 +40,10 @@
         <div class="columns">
             <div class="column is-3">
                 <nav class="panel">
-                    <p class="panel-heading">
-                        书目
+                    <p class="panel-heading" @click="toggleBookList">
+                        书目(Click to toggle)
                     </p>
-                    <div class="scroll-wrap">
+                    <div class="scroll-wrap" :class="{'is-hidden': !isShowBookList}">
                         <a class="panel-block" :class="{'is-active': currentBook == book.isbn}" v-for="book in bookList" @click="setBookDetail(book)">
                             <span class="panel-icon">
                                 <i class="fa fa-book"></i>
@@ -110,7 +111,8 @@
                     currentBook: null,
                     currentBookDetail: {},
                     currentPage: null,
-                    info: null
+                    info: null,
+                    isShowBookList: true
                 }
             },
             methods: {
@@ -136,6 +138,7 @@
                                     var page = getCookie(this.currentBook);
                                     if(!page) page = '0';
                                     this.getPage(page);
+                                    this.toggleBookList();
                                 }
                             },errorHandler
                     )
@@ -170,6 +173,9 @@
                 },
                 init: function(){
                     this.getBookList();
+                },
+                toggleBookList: function(){
+                    this.isShowBookList = !this.isShowBookList;
                 }
             },
             created: function(){
