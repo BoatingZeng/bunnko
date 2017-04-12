@@ -5,7 +5,9 @@ require('./gobj.js');
 
 var logger = gobj.Logger('app.js');
 
+var fs = require('fs');
 var http = require('http');
+var https = require('https');
 // 服务器组件挂载器
 var mounter = require('./lib/mounter.js');
 
@@ -22,7 +24,15 @@ var startServer = function() {
         }
         logger.info('服务器开始接收请求');
         var port = ServerConfig.LISTEN_PORT;
-        server = http.createServer(app);
+        var SSL = ServerConfig.SSL;
+        if(SSL.IS_SSL){
+            var privateKey  = fs.readFileSync(SSL.PRIVATE_KEY, 'utf8');
+            var certificate = fs.readFileSync(SSL.CERTIFICATE, 'utf8');
+            var credentials = {key: privateKey, cert: certificate};
+            server = https.createServer(credentials, app);
+        } else {
+            server = http.createServer(app);
+        }
         server.listen(port, function() {
             logger.info(gobj.format('服务器正在监听"%s:%d"', server.address().address, port));
         });
