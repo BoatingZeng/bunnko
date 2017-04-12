@@ -26,6 +26,7 @@ var startServer = function() {
         var port = ServerConfig.LISTEN_PORT;
         var SSL = ServerConfig.SSL;
         if(SSL.IS_SSL){
+            port = SSL.PORT;
             var privateKey  = fs.readFileSync(SSL.PRIVATE_KEY, 'utf8');
             var certificate = fs.readFileSync(SSL.CERTIFICATE, 'utf8');
             var credentials = {key: privateKey, cert: certificate};
