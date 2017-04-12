@@ -88,7 +88,7 @@
                         <span class="book-info-key">中文名：</span>{{currentBookDetail.chinese_name}}
                         <span class="book-info-key">作者：</span>{{currentBookDetail.writer}}
                         <span class="book-info-key">编号：</span>{{currentBookDetail.isbn}}
-                        <span class="book-info-key">当前编辑者：</span>{{currentEditor}}
+                        <span class="book-info-key">当前编辑者：</span><span :class="{'is-hidden': !currentPage}">{{currentEditor}}</span>
                     </span>
                 </p>
                 <div :class="{'is-hidden': !currentBook || !currentPage}">
