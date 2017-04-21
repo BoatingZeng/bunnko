@@ -30,7 +30,7 @@ var startServer = function() {
             /*var privateKey  = fs.readFileSync(SSL.PRIVATE_KEY, 'utf8');
             var certificate = fs.readFileSync(SSL.CERTIFICATE, 'utf8');*/
             var pfx = fs.readFileSync(SSL.PFX);
-            var passphrase = fs.readdirSync(SSL.PASSWORD);
+            var passphrase = fs.readFileSync(SSL.PASSWORD);
             var credentials = {pfx: pfx, passphrase: passphrase};
             server = https.createServer(credentials, app);
         } else {
