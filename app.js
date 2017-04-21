@@ -33,7 +33,7 @@ var startServer = function() {
             var passphrase = fs.readFileSync(SSL.PASSWORD);
             var credentials = {pfx: pfx, passphrase: passphrase};
             server = https.createServer(credentials, app);
-            var httpserver = require('express').createServer();
+            var httpserver = require('express')();
             httpserver.get('*',function(req,res){
                 res.redirect('https://mydomain.com'+req.url)
             });
