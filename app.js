@@ -33,8 +33,9 @@ var startServer = function() {
             var passphrase = fs.readFileSync(SSL.PASSWORD);
             var credentials = {pfx: pfx, passphrase: passphrase};
             server = https.createServer(credentials, app);
-            var httpserver = http.createServer(function(req, res){
-                res.redirect('https://'+ServerConfig+req.url);
+            var httpserver = require('express').createServer();
+            httpserver.get('*',function(req,res){
+                res.redirect('https://mydomain.com'+req.url)
             });
             httpserver.listen(80, function(){
                 logger.info(gobj.format('http服务器正在监听"%s:%d"', server.address().address, 80));
