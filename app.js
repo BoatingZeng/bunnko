@@ -27,9 +27,10 @@ var startServer = function() {
         var SSL = ServerConfig.SSL;
         if(SSL.IS_SSL){
             port = SSL.PORT;
-            var privateKey  = fs.readFileSync(SSL.PRIVATE_KEY, 'utf8');
-            var certificate = fs.readFileSync(SSL.CERTIFICATE, 'utf8');
-            var credentials = {key: privateKey, cert: certificate};
+            /*var privateKey  = fs.readFileSync(SSL.PRIVATE_KEY, 'utf8');
+            var certificate = fs.readFileSync(SSL.CERTIFICATE, 'utf8');*/
+            var pfx = fs.readFileSync(SSL.PFX);
+            var credentials = {pfx: pfx};
             server = https.createServer(credentials, app);
         } else {
             server = http.createServer(app);
