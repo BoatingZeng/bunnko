@@ -35,7 +35,7 @@ var startServer = function() {
             server = https.createServer(credentials, app);
             var httpserver = require('express')();
             httpserver.get('*',function(req,res){
-                res.redirect('https://mydomain.com'+req.url)
+                res.redirect('https://'+ServerConfig.DOMAIN+req.url);
             });
             httpserver.listen(80, function(){
                 logger.info(gobj.format('http服务器正在监听"%s:%d"', server.address().address, 80));
