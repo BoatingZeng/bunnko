@@ -27,6 +27,7 @@
     <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=459925524&auto=0&height=66"></iframe>
 </div>
 <div id="msg">msg</div>
+<div id="data">data</div>
 <script>
     function start(){
         window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
@@ -35,7 +36,10 @@
             return;
         }
         function setMsg(msg){
-            document.getElementById('msg').innerHTML = msg;
+            document.getElementById('msg').innerHTML += ' '+msg;
+        }
+        function setData(msg){
+            document.getElementById('data').innerHTML = msg;
         }
         function onError(evt){
             console.error('err');
@@ -60,11 +64,13 @@
             request.onerror=onError;
             request.onsuccess=function(e){
                 console.log('open success');
+                setMsg('open success');
                 myDB.db=e.target.result;
                 addData(myDB.db, 'models', function(evt){
                     getDataByKey(myDB.db, 'models', 1, function(evt){
                         console.log('get success');
-                        setMsg(evt.target.result.name);
+                        setMsg('get success');
+                        setData(JSON.stringify(evt.target.result));
                         deleteDataByKey(myDB.db, 'models', 1, function(evt){
                             console.log('delete success');
                             setMsg('delete success');
