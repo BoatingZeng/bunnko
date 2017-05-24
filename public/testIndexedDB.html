@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>testIndexedDB</title>
+    <script src="./modle.js"></script>
+
+</head>
+<body>
+<div id="msg">msg</div>
+<script>
+    function start(){
+        window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+        if(!window.indexedDB) {
+            setMsg('没有indexedDB对象');
+            return;
+        }
+        function setMsg(msg){
+            document.getElementById('msg').innerHTML = msg;
+        }
+        function onError(evt){
+            console.error('err');
+            console.error(evt);
+            setMsg(evt);
+        }
+        var model = {
+            id: 1,
+            name: 'test',
+            data: data
+        };
+
+        var myDB={
+            name:'test',
+            version:1,
+            db:null
+        };
+
+        function openDB (name, version) {
+            version = version || 1;
+            var request = window.indexedDB.open(name, version);
+            request.onerror=onError;
+            request.onsuccess=function(e){
+                console.log('open success');
+                myDB.db=e.target.result;
+                addData(myDB.db, 'models', function(evt){
+                    getDataByKey(myDB.db, 'models', 1, function(evt){
+                        console.log('get success');
+                        setMsg(evt.target.result.name);
+                        deleteDataByKey(myDB.db, 'models', 1, function(evt){
+                            console.log('delete success');
+                            setMsg('delete success');
+                        });
+                    });
+                });
+
+            };
+            request.onupgradeneeded=function(e){
+                var db=e.target.result;
+                if(!db.objectStoreNames.contains('models')){
+                    db.createObjectStore('models',{keyPath:"id"});
+                }
+                console.log('DB version changed to '+version);
+            };
+        }
+
+        function addData(db, storeName, cb){
+            var transaction=db.transaction(storeName,'readwrite');
+            transaction.onerror = onError;
+            var store=transaction.objectStore(storeName);
+            var request = store.add(model);
+            request.onsuccess = cb;
+        }
+
+        function getDataByKey(db,storeName,key, cb){
+            var transaction=db.transaction(storeName,'readwrite');
+            transaction.onerror = onError;
+            var store=transaction.objectStore(storeName);
+            var request=store.get(key);
+            request.onsuccess=cb;
+        }
+
+        function deleteDataByKey(db, storeName, key, cb){
+            var transaction=db.transaction(storeName,'readwrite');
+            transaction.onerror = onError;
+            var store=transaction.objectStore(storeName);
+            var request=store.delete(key);
+            request.onsuccess=cb;
+        }
+
+        openDB(myDB.name,myDB.version);
+    }
+    start();
+</script>
+</body>
+</html>
