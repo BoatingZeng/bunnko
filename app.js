@@ -27,14 +27,12 @@ var startServer = function() {
         var SSL = ServerConfig.SSL;
         if(SSL.IS_SSL){
             port = SSL.PORT;
-            /*var privateKey  = fs.readFileSync(SSL.PRIVATE_KEY, 'utf8');
-            var certificate = fs.readFileSync(SSL.CERTIFICATE, 'utf8');*/
             var pfx = fs.readFileSync(SSL.PFX);
             var passphrase = fs.readFileSync(SSL.PASSWORD);
             var credentials = {pfx: pfx, passphrase: passphrase};
             server = https.createServer(credentials, app);
             var httpserver = require('express')();
-            httpserver.get('*',function(req,res){
+            httpserver.use(function(req,res){
                 res.redirect('https://'+ServerConfig.DOMAIN+req.url);
             });
             httpserver.listen(80, function(){
@@ -45,6 +43,9 @@ var startServer = function() {
         }
         server.listen(port, function() {
             logger.info(gobj.format('服务器正在监听"%s:%d"', server.address().address, port));
+            setTimeout(function(){
+                throw new Error('test error');
+            }, 5000);
         });
     });
 };
@@ -52,16 +53,10 @@ var startServer = function() {
 /** 停止服务器,同时退出进程 */
 var stopServer = function() {
     if(server) {
-        logger.info('开始停止服务器');
-        // http处理完请求后退出进程，如果在此处添加了关闭事件回调函数，Server可能不会触
-        // 发close事件,调用以下方法后，子进程与主进程会断开连接，因此后续日志信息不会显示
+        //请求处理完后直接退出进程
         server.close(exitProcess);
     }
-
-    // 保证强制退出进程
-    setTimeout(exitProcess, ServerConfig.STOP_TIMEOUT);
     function exitProcess() {
-        logger.info(gobj.format('服务器进程退出，进程号"%d"', process.pid));
         process.exit(1);
     }
 };
@@ -69,17 +64,6 @@ var stopServer = function() {
 process.on('uncaughtException', function(err) {
     logger.error('应用程序发生意外异常,即将停止', err);
     stopServer();
-});
-
-//执行来自cluster进程的命令
-process.on('message',function(cmd){
-    if(typeof(cmd) == 'string') {
-        logger.info(gobj.format('接收到集群服务器命令"%s"', cmd));
-        if(cmd == 'stop') {
-            // 服务器停止命令
-            stopServer();
-        }
-    }
 });
 
 startServer();
